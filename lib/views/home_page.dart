@@ -13,8 +13,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DataService dataService = DataService();
+  TextEditingController searchController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,12 +41,16 @@ class _HomePageState extends State<HomePage> {
               height: 20,
             ),
             TextFormField(
+              controller: searchController,
+              onChanged: (value) {
+                setState(() {});
+              },
               decoration: InputDecoration(
                 prefixIcon: Icon(
                   Icons.search_sharp,
                   color: Colors.grey,
                 ),
-                hintText: 'search by name',
+                hintText: 'Search by name',
                 hintStyle: GoogleFonts.montserrat(),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(50),
@@ -64,35 +70,38 @@ class _HomePageState extends State<HomePage> {
             SizedBox(
               height: 10,
             ),
-            StreamBuilder<List<UserDataModel>>(
-            stream: dataService.getUsers(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              } else {
-                List<UserDataModel>? fetchedUsers = snapshot.data;
-                if (fetchedUsers == null || fetchedUsers.isEmpty) {
-                  return Text('No users found.');
-                } else {
-                  return Expanded(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: fetchedUsers.length,
+            Expanded(
+              child: StreamBuilder<List<UserDataModel>>(
+                stream: dataService.getUsers(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else {
+                    List<UserDataModel> allUsers = snapshot.data ?? [];
+                    List<UserDataModel> filteredUsers = allUsers.where((user) =>
+                      user.name!.toLowerCase().contains(searchController.text.toLowerCase())
+                    ).toList();
+
+                    if (filteredUsers.isEmpty) {
+                      return Center(child: Text('No users found.'));
+                    }
+
+                    return ListView.builder(
+                      itemCount: filteredUsers.length,
                       itemBuilder: (context, index) {
-                        final user = fetchedUsers[index];
+                        final user = filteredUsers[index];
                         return ListTile(
                           title: Text(user.name ?? ''),
                           subtitle: Text(user.phoneNumber ?? ''),
                         );
                       },
-                    ),
-                  );
-                }
-              }
-            },
-          ),
+                    );
+                  }
+                },
+              ),
+            ),
           ],
         ),
       ),

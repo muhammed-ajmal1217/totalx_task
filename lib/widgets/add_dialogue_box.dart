@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:totalx_machine_task/model/user_data_model.dart';
@@ -101,6 +102,7 @@ class AddDialogueBox extends StatelessWidget {
                         name: nameController.text,
                         phoneNumber: phoneController.text,
                         image: '',
+                        time: Timestamp.now()
                       );
                       DataService().addUserCollection(users);
                       Navigator.pop(context);
